@@ -11,7 +11,6 @@ const ChatBox = () => {
   const [inputVal, setInputVal] = useState("");
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [micActive, setMicActive] = useState(false);
   const [isMultiLine, setIsMultiLine] = useState(false);
   const { serverURL } = serverObj;
   const messageEndRef = useRef(null);
@@ -57,20 +56,15 @@ const ChatBox = () => {
 
   const handleVoiceToText = () => {
     if (!browserSupportsSpeechRecognition) {
-      alert(
-        "Your browser does not support speech recognition. Try Chrome on Android."
-      );
+      alert("Your browser does not support speech recognition.");
       return;
     }
 
-    if (!listening) SpeechRecognition.startListening({ continuous: true });
-    if (!micActive) {
-      SpeechRecognition.startListening();
+    if (!listening) {
+      SpeechRecognition.startListening({ continuous: true });
     } else {
-      // Stop listening
       SpeechRecognition.stopListening();
     }
-    setMicActive(!micActive);
   };
 
   const scrollToBottom = () => {
@@ -101,6 +95,7 @@ const ChatBox = () => {
   return (
     <div className="h-full flex flex-col text-zinc-100 rounded-xl overflow-hidden pt-3">
       {/* Messages Container */}
+      {/* {console.log("adsf" + micActive)} */}
       <div className="flex-1 overflow-y-scroll p-1 sm:p-4 space-y-6 lg:px-25">
         {/* Empty state */}
         {messages.length === 0 ? (
@@ -193,7 +188,7 @@ const ChatBox = () => {
             <div className="flex gap-2 self-end">
               <button
                 className={`p-2  cursor-pointer transition-colors rounded-full ${
-                  micActive
+                  listening
                     ? "bg-red-500/20 text-red-400 " // Changed to red when active
                     : "hover:bg-zinc-700/50 text-zinc-400 hover:text-white"
                 } `}
@@ -201,7 +196,7 @@ const ChatBox = () => {
                 type="button"
                 onClick={handleVoiceToText}
               >
-                <Mic size={20} className={`${micActive && "animate-pulse"}`} />
+                <Mic size={20} className={`${listening && "animate-pulse"}`} />
               </button>
               <button
                 disabled={!inputVal?.trim()}
