@@ -15,13 +15,13 @@ const ChatBox = () => {
     resetTranscript,
     browserSupportsSpeechRecognition,
   } = useSpeechRecognition();
-
   const [messages, setMessages] = useState([]);
   const { register, handleSubmit, watch, reset, setValue } = useForm({
     shouldUnregister: false,
   });
   const [isMultiLine, setIsMultiLine] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
   const inputVal = watch("inputVal");
@@ -36,11 +36,12 @@ const ChatBox = () => {
     }
   };
 
+  // Handle Enter key press
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
+      e.preventDefault(); // prevent newline
       if (inputVal?.trim()) {
-        handleSubmit(handleSendMessage)();
+        handleSubmit(handleSendMessage)(); // trigger your form submit
       }
     }
   };
@@ -48,6 +49,8 @@ const ChatBox = () => {
   const handleSendMessage = async ({ inputVal }) => {
     try {
       setIsLoading(true);
+
+      // Add user message
       setMessages((prev) => [...prev, { role: "user", text: inputVal }]);
 
       if (textareaRef.current) {
@@ -56,10 +59,11 @@ const ChatBox = () => {
       setIsMultiLine(false);
       reset();
 
+      // Get AI response
       const { data } = await axios.post(`${serverURL}/chat`, {
         msg: inputVal,
       });
-
+      console.log(data.reply);
       setMessages((prev) => [...prev, { role: "system", text: data.reply }]);
     } catch (err) {
       setMessages((prev) => [
@@ -83,6 +87,7 @@ const ChatBox = () => {
     scrollToBottom();
   }, [messages]);
 
+  // Effect to handle textarea height when input value changes
   useEffect(() => {
     if (textareaRef.current) {
       const textarea = textareaRef.current;
@@ -98,42 +103,31 @@ const ChatBox = () => {
       alert(
         "Your browser does not support speech recognition. Try Chrome on Android."
       );
-      return;
     }
 
-    if (listening) {
-      SpeechRecognition.stopListening();
+    if (!isSpeaking) {
+      SpeechRecognition.startListening();
     } else {
-      resetTranscript();
-      SpeechRecognition.startListening({
-        continuous: true,
-        language: "en-US",
-      });
+      SpeechRecognition.stopListening();
     }
+    setIsSpeaking(!isSpeaking);
   };
 
+  // Add this effect in your component
   useEffect(() => {
     if (transcript) {
-      setValue("inputVal", transcript);
-      alert(transcript);
+      setValue("inputVal", transcript); // update textarea value with transcript
     }
   }, [transcript, setValue]);
 
-  useEffect(() => {
-    return () => {
-      if (listening) {
-        SpeechRecognition.stopListening();
-      }
-    };
-  }, [listening]);
-
   return (
     <div className="h-full flex flex-col text-zinc-100 rounded-xl overflow-hidden pt-3">
-      <div className="flex-1 overflow-y-scroll p-1 sm:p-4 space-y-6 lg:px-25">
+      {/* Messages Container */}
+      <div className="flex-1 overflow-y-scroll p-1 sm:p-4 space-y-6  lg:px-25">
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-zinc-400">
-            <div className="relative">
-              <div className="w-16 h-16 rounded-full flex items-center justify-center">
+            <div className="relative ">
+              <div className="w-16 h-16  rounded-full flex items-center justify-center">
                 <Sparkles size={28} className="text-white" />
               </div>
             </div>
@@ -153,7 +147,7 @@ const ChatBox = () => {
               } group`}
             >
               <div
-                className={`flex max-w-xs md:max-w-md ${
+                className={`flex max-w-xs md:max-w-md  ${
                   message.role === "user"
                     ? "flex-row-reverse lg:max-w-xl"
                     : " lg:max-w-full"
@@ -184,7 +178,8 @@ const ChatBox = () => {
           <div className="flex justify-start group">
             <div className="flex max-w-xs md:max-w-md lg:max-w-lg xl:max-w-xl">
               <div className="h-7 w-7 shrink-0 -translate-y-0.5 rounded-full flex items-center justify-center bg-gradient-to-br from-zinc-700 to-zinc-800 mr-1">
-                <img src={logo} alt="" className="h-full w-full" />
+                {/* <Bot size={16} className="text-white" /> */}
+                <img src={logo} alt="" className="h-full w-full " />
               </div>
               <div className="rounded-xl px-4 pt-2 bg-zinc-800 rounded-tl-none">
                 <div className="flex space-x-1.5">
@@ -203,14 +198,14 @@ const ChatBox = () => {
         <div ref={messagesEndRef} />
       </div>
 
-      {console.log(transcript)}
-
+      {/* Input Area */}
       <div className="px-4 lg:px-25 mb-2">
         <div className="bg-[#303030] rounded-xl py-2 shadow-inner px-2">
           <form
-            className={`flex ${isMultiLine ? "flex-col" : "items-end"} gap-2`}
+            className={`flex  ${isMultiLine ? "flex-col" : "items-end"} gap-2`}
             onSubmit={handleSubmit(handleSendMessage)}
           >
+            {/* Textarea */}
             <textarea
               {...register("inputVal", {
                 required: true,
@@ -222,29 +217,25 @@ const ChatBox = () => {
               onInput={(e) => handleChangeInput(e)}
               onKeyDown={(e) => handleKeyDown(e)}
               ref={(el) => {
-                textareaRef.current = el;
-                register("inputVal").ref(el);
+                textareaRef.current = el; // keep your ref
+                register("inputVal").ref(el); // also give RHF its ref
               }}
             />
-
+            {/* Action buttons */}
             <div className="flex gap-2 self-end">
               <button
                 className={`p-2 text-zinc-400 hover:text-white cursor-pointer transition-colors rounded-full hover:bg-zinc-700/50 ${
-                  listening ? "bg-zinc-700 " : ""
+                  isSpeaking && "bg-zinc-700"
                 }`}
                 title="Voice input"
                 type="button"
                 onClick={handleVoiceToText}
-                disabled={!browserSupportsSpeechRecognition}
               >
                 <Mic
                   size={20}
-                  className={`${
-                    listening ? "animate-pulse text-zinc-300" : ""
-                  }`}
+                  className={`${isSpeaking && "animate-pulse text-zinc-300"}`}
                 />
               </button>
-
               <button
                 disabled={!inputVal?.trim()}
                 className={`p-2 rounded-full transition-all ${
