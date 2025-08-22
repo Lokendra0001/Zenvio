@@ -60,7 +60,9 @@ const ChatBox = () => {
       return;
     }
 
+    // MUST be triggered by a user click
     if (!listening) {
+      resetTranscript(); // Clear old transcript first
       SpeechRecognition.startListening({ continuous: true });
     } else {
       SpeechRecognition.stopListening();
@@ -70,6 +72,14 @@ const ChatBox = () => {
   const scrollToBottom = () => {
     messageEndRef.current.scrollIntoView({ behavior: "smooth" });
   };
+
+  useEffect(() => {
+    if (!SpeechRecognition.browserSupportsSpeechRecognition()) return;
+
+    // Initialize the SpeechRecognition instance on mount
+    SpeechRecognition.startListening({ continuous: false });
+    SpeechRecognition.stopListening();
+  }, []);
 
   // Keep transcript synced to input when mic is active
   useEffect(() => {
