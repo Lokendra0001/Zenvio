@@ -115,6 +115,7 @@ const ChatBox = () => {
   useEffect(() => {
     if (transcript) {
       setValue("inputVal", transcript);
+      alert(transcript);
     }
   }, [transcript, setValue]);
 
@@ -202,6 +203,8 @@ const ChatBox = () => {
         <div ref={messagesEndRef} />
       </div>
 
+      {console.log(transcript)}
+
       <div className="px-4 lg:px-25 mb-2">
         <div className="bg-[#303030] rounded-xl py-2 shadow-inner px-2">
           <form
@@ -227,7 +230,7 @@ const ChatBox = () => {
             <div className="flex gap-2 self-end">
               <button
                 className={`p-2 text-zinc-400 hover:text-white cursor-pointer transition-colors rounded-full hover:bg-zinc-700/50 ${
-                  listening ? "bg-zinc-700" : ""
+                  listening ? "bg-zinc-700 " : ""
                 }`}
                 title="Voice input"
                 type="button"
