@@ -98,6 +98,14 @@ const ChatBox = () => {
     scrollToBottom();
   }, [messages]);
 
+  useEffect(() => {
+    if (!browserSupportsSpeechRecognition) return;
+
+    // Warm-up SpeechRecognition instance
+    SpeechRecognition.startListening({ continuous: false });
+    SpeechRecognition.stopListening();
+  }, []);
+
   return (
     <div className="h-full flex flex-col text-zinc-100 rounded-xl overflow-hidden pt-3">
       {/* Messages Container */}
@@ -219,7 +227,7 @@ const ChatBox = () => {
                     }}
                     className="p-2 rounded-full bg-red-500 text-white"
                   >
-                    Stop Mic
+                    Stop
                   </button>
                 )}
               </div>
