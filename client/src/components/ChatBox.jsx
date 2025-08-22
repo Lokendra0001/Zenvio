@@ -58,26 +58,33 @@ const ChatBox = () => {
 
   const handleVoiceToText = () => {
     if (!browserSupportsSpeechRecognition) {
-      alert("Browser doesn't support microphone! try another browser.");
+      alert(
+        "Your browser does not support speech recognition. Try other browser."
+      );
+      return;
     }
 
+    if (!listening) SpeechRecognition.startListening({ continuous: true });
+
     if (!micActive) {
-      resetTranscript();
-      SpeechRecognition.startListening({
-        continuous: true,
-        interimResults: true,
-        language: "en-IN",
-      });
-      setMicActive(true);
+      SpeechRecognition.startListening();
     } else {
       SpeechRecognition.stopListening();
-      setMicActive(false);
     }
+
+    setMicActive(!micActive);
   };
 
   const scrollToBottom = () => {
     messageEndRef.current.scrollIntoView({ behavior: "smooth" });
   };
+
+  // Keep transcript synced to input when mic is active
+  useEffect(() => {
+    if (micActive) {
+      setInputVal(transcript);
+    }
+  }, [transcript, micActive]);
 
   useEffect(() => {
     const textarea = textareaRef.current;
