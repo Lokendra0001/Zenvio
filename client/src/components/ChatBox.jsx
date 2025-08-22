@@ -98,18 +98,6 @@ const ChatBox = () => {
     }
   }, [inputVal]);
 
-  useEffect(() => {
-    // Whenever listening stops, reset isSpeaking
-    if (browserSupportsSpeechRecognition) {
-      const handleEnd = () => setIsSpeaking(false);
-      SpeechRecognition.onend = handleEnd;
-
-      return () => {
-        SpeechRecognition.onend = null; // cleanup
-      };
-    }
-  }, [browserSupportsSpeechRecognition]);
-
   const handleVoiceToText = () => {
     if (!browserSupportsSpeechRecognition) {
       alert(
@@ -118,14 +106,19 @@ const ChatBox = () => {
       return;
     }
 
-    if (!isSpeaking) {
+    if (!listening) {
+      // Start listening continuously
       SpeechRecognition.startListening({ continuous: true });
-      setIsSpeaking(true);
     } else {
+      // Stop listening
       SpeechRecognition.stopListening();
-      setIsSpeaking(false);
     }
   };
+
+  // Keep your mic button state in sync
+  useEffect(() => {
+    setIsSpeaking(listening);
+  }, [listening]);
 
   // Add this effect in your component
   useEffect(() => {
