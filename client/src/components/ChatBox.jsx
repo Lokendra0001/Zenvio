@@ -57,25 +57,16 @@ const ChatBox = () => {
   };
 
   const handleVoiceToText = () => {
-    if (!browserSupportsSpeechRecognition) {
-      alert("Speech recognition not supported in this browser.");
-      return;
-    }
+    if (!browserSupportsSpeechRecognition) return;
 
     if (!micActive) {
-      // Start mic
-      SpeechRecognition.startListening({
-        continuous: false, // continuous not reliable on mobile
-        language: "en-US", // or "en-IN"
-      });
-      console.log("Mic started");
-      setMicActive(true);
+      resetTranscript();
+      SpeechRecognition.startListening({ continuous: true, language: "en-IN" });
     } else {
-      // Stop mic
       SpeechRecognition.stopListening();
-      console.log("Mic stopped");
-      setMicActive(false);
     }
+
+    setMicActive(!micActive); // control UI independently
   };
 
   const scrollToBottom = () => {
@@ -88,6 +79,12 @@ const ChatBox = () => {
       setInputVal(transcript);
     }
   }, [transcript, micActive]);
+
+  useEffect(() => {
+    if (micActive && !listening) {
+      SpeechRecognition.startListening({ continuous: true, language: "en-IN" });
+    }
+  }, [micActive, listening]);
 
   useEffect(() => {
     const textarea = textareaRef.current;
