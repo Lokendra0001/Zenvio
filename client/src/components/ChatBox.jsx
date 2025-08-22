@@ -56,24 +56,24 @@ const ChatBox = () => {
     }
   };
 
-  const handleVoiceToText = () => {
-    if (!browserSupportsSpeechRecognition) {
-      alert(
-        "Your browser does not support speech recognition. Try other browser."
-      );
-      return;
-    }
+  // const handleVoiceToText = () => {
+  //   if (!browserSupportsSpeechRecognition) {
+  //     alert(
+  //       "Your browser does not support speech recognition. Try other browser."
+  //     );
+  //     return;
+  //   }
 
-    if (!listening) SpeechRecognition.startListening({ continuous: true });
+  //   if (!listening) SpeechRecognition.startListening({ continuous: true });
 
-    if (!micActive && !listening) {
-      SpeechRecognition.startListening();
-    } else {
-      SpeechRecognition.stopListening();
-    }
+  //   if (!micActive && !listening) {
+  //     SpeechRecognition.startListening();
+  //   } else {
+  //     SpeechRecognition.stopListening();
+  //   }
 
-    setMicActive(!micActive);
-  };
+  //   setMicActive(!micActive);
+  // };
 
   const scrollToBottom = () => {
     messageEndRef.current.scrollIntoView({ behavior: "smooth" });
@@ -81,10 +81,8 @@ const ChatBox = () => {
 
   // Keep transcript synced to input when mic is active
   useEffect(() => {
-    if (micActive) {
-      setInputVal(transcript);
-    }
-  }, [transcript, micActive]);
+    setInputVal(transcript);
+  }, [transcript]);
 
   useEffect(() => {
     const textarea = textareaRef.current;
@@ -196,18 +194,35 @@ const ChatBox = () => {
 
             {/* Action buttons */}
             <div className="flex gap-2 self-end">
-              <button
-                className={`p-2  cursor-pointer transition-colors rounded-full ${
-                  micActive
-                    ? "bg-zinc-700/70 text-white/80 "
-                    : "hover:bg-zinc-700/50 text-zinc-400 hover:text-white"
-                } `}
-                title="Voice input"
-                type="button"
-                onClick={handleVoiceToText}
-              >
-                <Mic size={20} className={`${micActive && "animate-pulse"}`} />
-              </button>
+              <div className="flex gap-2 mt-2">
+                {/* Start Listening Button */}
+                {!listening ? (
+                  <button
+                    onClick={() => {
+                      if (!browserSupportsSpeechRecognition) {
+                        alert(
+                          "Your browser does not support speech recognition."
+                        );
+                        return;
+                      }
+                      resetTranscript();
+                      SpeechRecognition.startListening({ continuous: true });
+                    }}
+                    className="p-2 rounded-full bg-green-500 text-white"
+                  >
+                    Start
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => {
+                      SpeechRecognition.stopListening();
+                    }}
+                    className="p-2 rounded-full bg-red-500 text-white"
+                  >
+                    Stop Mic
+                  </button>
+                )}
+              </div>
 
               {console.log(listening)}
 
