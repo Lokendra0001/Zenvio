@@ -6,6 +6,7 @@ import logo from "../assests/images/logo3.png";
 import SpeechRecognition, {
   useSpeechRecognition,
 } from "react-speech-recognition";
+import serverObj from "../config/serverObj";
 
 const ChatBox = () => {
   const {
@@ -24,6 +25,7 @@ const ChatBox = () => {
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
   const inputVal = watch("inputVal");
+  const { serverURL } = serverObj;
 
   const handleChangeInput = (e) => {
     if (e) {
@@ -58,7 +60,7 @@ const ChatBox = () => {
       reset();
 
       // Get AI response
-      const { data } = await axios.post("http://localhost:3000/chat", {
+      const { data } = await axios.post(`${serverURL}/chat`, {
         msg: inputVal,
       });
       console.log(data.reply);
