@@ -11,6 +11,7 @@ const ChatBox = () => {
   const [inputVal, setInputVal] = useState("");
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [micActive, setMicActive] = useState(false);
   const [isMultiLine, setIsMultiLine] = useState(false);
   const { serverURL } = serverObj;
   const messageEndRef = useRef(null);
@@ -25,6 +26,7 @@ const ChatBox = () => {
   const handleSendMessage = async () => {
     try {
       setLoading(true);
+
       setMessages((prev) => [...prev, { role: "user", text: inputVal }]);
       setInputVal("");
       // const { data } = await axios.post(`${serverURL}/chat`, { msg: inputVal });
@@ -56,37 +58,33 @@ const ChatBox = () => {
 
   const handleVoiceToText = () => {
     if (!browserSupportsSpeechRecognition) {
-      alert("Your browser does not support speech recognition.");
+      alert(
+        "Your browser does not support speech recognition. Try other browser."
+      );
       return;
     }
 
-    // MUST be triggered by a user click
-    if (!listening) {
-      resetTranscript(); // Clear old transcript first
-      SpeechRecognition.startListening({ continuous: true });
+    if (!listening) SpeechRecognition.startListening({ continuous: true });
+
+    if (!micActive) {
+      SpeechRecognition.startListening();
     } else {
       SpeechRecognition.stopListening();
     }
+
+    setMicActive(!micActive);
   };
 
   const scrollToBottom = () => {
     messageEndRef.current.scrollIntoView({ behavior: "smooth" });
   };
 
-  useEffect(() => {
-    if (!SpeechRecognition.browserSupportsSpeechRecognition()) return;
-
-    // Initialize the SpeechRecognition instance on mount
-    SpeechRecognition.startListening({ continuous: false });
-    SpeechRecognition.stopListening();
-  }, []);
-
   // Keep transcript synced to input when mic is active
   useEffect(() => {
-    if (listening) {
+    if (micActive) {
       setInputVal(transcript);
     }
-  }, [transcript, listening]); // Use listening instead of micActive
+  }, [transcript, micActive]);
 
   useEffect(() => {
     const textarea = textareaRef.current;
@@ -105,9 +103,9 @@ const ChatBox = () => {
   return (
     <div className="h-full flex flex-col text-zinc-100 rounded-xl overflow-hidden pt-3">
       {/* Messages Container */}
-      {/* {console.log("adsf" + micActive)} */}
       <div className="flex-1 overflow-y-scroll p-1 sm:p-4 space-y-6 lg:px-25">
         {/* Empty state */}
+
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-zinc-400">
             <div className="relative">
@@ -148,6 +146,7 @@ const ChatBox = () => {
             </div>
           ))
         )}
+
         {/* Loading example */}
         {loading && (
           <div className="flex justify-start group">
@@ -169,8 +168,10 @@ const ChatBox = () => {
             </div>
           </div>
         )}
+
         <div ref={messageEndRef} />
       </div>
+
       {/* Input Area */}
       <div className="px-4 lg:px-25 mb-2 ">
         <div className="bg-[#303030] rounded-xl  py-2 shadow-inner px-2">
@@ -180,8 +181,6 @@ const ChatBox = () => {
             }  gap-2`}
           >
             {/* Textarea */}
-
-            {console.log(listening)}
             <textarea
               ref={textareaRef}
               placeholder="Ask Anything..."
@@ -194,20 +193,24 @@ const ChatBox = () => {
               onChange={(e) => setInputVal(e.target.value)}
               onKeyDown={(e) => handleKeyDown(e)}
             />
+
             {/* Action buttons */}
             <div className="flex gap-2 self-end">
               <button
                 className={`p-2  cursor-pointer transition-colors rounded-full ${
-                  listening
-                    ? "bg-red-500/20 text-red-400 " // Changed to red when active
+                  micActive
+                    ? "bg-zinc-700/70 text-white/80 "
                     : "hover:bg-zinc-700/50 text-zinc-400 hover:text-white"
                 } `}
                 title="Voice input"
                 type="button"
                 onClick={handleVoiceToText}
               >
-                <Mic size={20} className={`${listening && "animate-pulse"}`} />
+                <Mic size={20} className={`${micActive && "animate-pulse"}`} />
               </button>
+
+              {console.log(listening)}
+
               <button
                 disabled={!inputVal?.trim()}
                 className={`p-2 rounded-full transition-all duration-100 ${
