@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Mic, Sparkles, ArrowUp, Square, AlertCircle } from "lucide-react";
+import { Mic, Sparkles, ArrowUp, Square } from "lucide-react";
 import logo from "../assests/images/logo3.png";
 import axios from "axios";
 import serverObj from "../config/serverObj";
@@ -12,7 +12,6 @@ const ChatBox = () => {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isMultiLine, setIsMultiLine] = useState(false);
-  const [micError, setMicError] = useState(null);
   const { serverURL } = serverObj;
   const messageEndRef = useRef(null);
   const textareaRef = useRef(null);
@@ -21,39 +20,61 @@ const ChatBox = () => {
     listening,
     resetTranscript,
     browserSupportsSpeechRecognition,
-    isMicrophoneAvailable,
   } = useSpeechRecognition();
 
-  // Handle microphone errors
-  useEffect(() => {
-    if (!browserSupportsSpeechRecognition) {
-      setMicError("Speech recognition is not supported in your browser");
-    } else if (!isMicrophoneAvailable) {
-      setMicError("Microphone is not available or permission denied");
-    } else {
-      setMicError(null);
+  const handleSendMessage = async () => {
+    try {
+      setLoading(true);
+      setMessages((prev) => [...prev, { role: "user", text: inputVal }]);
+      setInputVal("");
+      // const { data } = await axios.post(`${serverURL}/chat`, { msg: inputVal });
+      // console.log(data.reply);
+      // setMessages((prev) => [...prev, { role: "system", text: data.reply }]);
+    } catch (err) {
+      console.log(err);
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "system",
+          text: "Something Went Wrong. try again later!",
+          color: true,
+        },
+      ]);
+    } finally {
+      setLoading(false);
     }
-  }, [browserSupportsSpeechRecognition, isMicrophoneAvailable]);
+  };
 
-  const handleVoiceToText = async () => {
-    if (!browserSupportsSpeechRecognition || !isMicrophoneAvailable) {
+  const handleKeyDown = (e) => {
+    if (e.key == "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      if (inputVal?.trim()) {
+        handleSendMessage();
+      }
+    }
+  };
+
+  const handleVoiceToText = () => {
+    if (!browserSupportsSpeechRecognition) {
+      alert(
+        "Your browser does not support speech recognition. Try other browser."
+      );
       return;
     }
 
-    try {
-      if (listening) {
-        SpeechRecognition.stopListening();
-      } else {
-        resetTranscript();
-        await SpeechRecognition.startListening({ 
-          continuous: true, 
-          language: "en-US" 
-        });
-      }
-    } catch (error) {
-      console.error("Microphone error:", error);
-      setMicError("Failed to access microphone. Please check permissions.");
+    if (!listening) {
+      resetTranscript();
+      SpeechRecognition.startListening({
+        continuous: true,
+        language: "en-US",
+      });
+    } else {
+      SpeechRecognition.stopListening();
     }
+  };
+
+  const scrollToBottom = () => {
+    messageEndRef.current.scrollIntoView({ behavior: "smooth" });
   };
 
   // Keep transcript synced to input when mic is active
@@ -61,14 +82,8 @@ const ChatBox = () => {
     if (listening) {
       setInputVal(transcript);
     }
-  }, [transcript, listening]);
+  }, [transcript, listening]); // Use listening instead of micActive
 
-  // Auto-scroll to bottom
-  useEffect(() => {
-    messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
-  // Auto-resize textarea
   useEffect(() => {
     const textarea = textareaRef.current;
     if (textarea) {
@@ -78,6 +93,10 @@ const ChatBox = () => {
       setIsMultiLine(textarea.scrollHeight > 40);
     }
   }, [inputVal]);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   return (
     <div className="h-full flex flex-col text-zinc-100 rounded-xl overflow-hidden pt-3">
@@ -107,10 +126,10 @@ const ChatBox = () => {
               } group`}
             >
               <div
-                className={`rounded-xl px-3 py-1 ${
+                className={`rounded-xl px-3  py-1 ${
                   message.role === "user"
                     ? "bg-[#303030bd] rounded-tr-none max-w-[80%] lg:max-w-lg xl:max-w-xl"
-                    : "rounded-tl-none xl:max-w-full"
+                    : "rounded-tl-none   xl:max-w-full"
                 }`}
               >
                 <p
@@ -124,8 +143,7 @@ const ChatBox = () => {
             </div>
           ))
         )}
-
-        {/* Loading state */}
+        {/* Loading example */}
         {loading && (
           <div className="flex justify-start group">
             <div className="flex max-w-xs md:max-w-md lg:max-w-lg xl:max-w-xl">
@@ -146,27 +164,15 @@ const ChatBox = () => {
             </div>
           </div>
         )}
-        
-        {/* Microphone error message */}
-        {micError && (
-          <div className="flex justify-center">
-            <div className="flex items-center bg-red-900/30 text-red-300 px-4 py-2 rounded-lg text-sm">
-              <AlertCircle size={16} className="mr-2" />
-              {micError}
-            </div>
-          </div>
-        )}
-        
         <div ref={messageEndRef} />
       </div>
-
       {/* Input Area */}
-      <div className="px-4 lg:px-25 mb-2">
-        <div className="bg-[#303030] rounded-xl py-2 shadow-inner px-2">
+      <div className="px-4 lg:px-25 mb-2 ">
+        <div className="bg-[#303030] rounded-xl  py-2 shadow-inner px-2">
           <div
             className={`flex ${
-              isMultiLine ? "flex-col" : "items-end"
-            } gap-2`}
+              isMultiLine ? "flex-col " : " items-end"
+            }  gap-2`}
           >
             {/* Textarea */}
             <textarea
@@ -174,50 +180,27 @@ const ChatBox = () => {
               placeholder="Ask Anything..."
               className={`w-full ${
                 !inputVal.trim() && "leading-[40px]"
-              } bg-transparent border-none outline-none resize-none px-3 text-zinc-100
+              } bg-transparent  border-none outline-none resize-none px-3 text-zinc-100
               overflow-y-scroll min-h-[40px] max-h-[200px] break-words`}
               rows={1}
               value={inputVal}
               onChange={(e) => setInputVal(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  if (inputVal?.trim()) {
-                    handleSendMessage();
-                  }
-                }
-              }}
+              onKeyDown={(e) => handleKeyDown(e)}
             />
-            
             {/* Action buttons */}
             <div className="flex gap-2 self-end">
               <button
-                disabled={!browserSupportsSpeechRecognition || !isMicrophoneAvailable}
-                className={`p-2 cursor-pointer transition-colors rounded-full ${
+                className={`p-2  cursor-pointer transition-colors rounded-full ${
                   listening
-                    ? "bg-red-500/20 text-red-400"
-                    : !browserSupportsSpeechRecognition || !isMicrophoneAvailable
-                    ? "text-zinc-600 cursor-not-allowed"
+                    ? "bg-red-500/20 text-red-400" // Changed to red when active
                     : "hover:bg-zinc-700/50 text-zinc-400 hover:text-white"
-                }`}
-                title={
-                  !browserSupportsSpeechRecognition
-                    ? "Speech recognition not supported"
-                    : !isMicrophoneAvailable
-                    ? "Microphone not available"
-                    : listening
-                    ? "Stop listening"
-                    : "Voice input"
-                }
+                } `}
+                title="Voice input"
                 type="button"
                 onClick={handleVoiceToText}
               >
-                <Mic 
-                  size={20} 
-                  className={listening ? "animate-pulse" : ""} 
-                />
+                <Mic size={20} className={`${listening && "animate-pulse"}`} />
               </button>
-              
               <button
                 disabled={!inputVal?.trim()}
                 className={`p-2 rounded-full transition-all duration-100 ${
@@ -228,11 +211,7 @@ const ChatBox = () => {
                     : "text-zinc-500 bg-zinc-700"
                 }`}
                 title="Send message"
-                onClick={() => {
-                  if (inputVal?.trim()) {
-                    handleSendMessage();
-                  }
-                }}
+                onClick={handleSendMessage}
               >
                 {loading ? (
                   <Square
@@ -242,7 +221,7 @@ const ChatBox = () => {
                   />
                 ) : (
                   <ArrowUp size={20} />
-                )}
+                )}{" "}
               </button>
             </div>
           </div>
