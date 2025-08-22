@@ -98,6 +98,18 @@ const ChatBox = () => {
     }
   }, [inputVal]);
 
+  useEffect(() => {
+    // Whenever listening stops, reset isSpeaking
+    if (browserSupportsSpeechRecognition) {
+      const handleEnd = () => setIsSpeaking(false);
+      SpeechRecognition.onend = handleEnd;
+
+      return () => {
+        SpeechRecognition.onend = null; // cleanup
+      };
+    }
+  }, [browserSupportsSpeechRecognition]);
+
   const handleVoiceToText = () => {
     if (!browserSupportsSpeechRecognition) {
       alert(
@@ -107,13 +119,8 @@ const ChatBox = () => {
     }
 
     if (!isSpeaking) {
-      SpeechRecognition.startListening({ continuous: true }); // continuous keeps listening
+      SpeechRecognition.startListening({ continuous: true });
       setIsSpeaking(true);
-
-      // Automatically reset isSpeaking when listening ends (e.g., user silent)
-      SpeechRecognition.onend = () => {
-        setIsSpeaking(false);
-      };
     } else {
       SpeechRecognition.stopListening();
       setIsSpeaking(false);
