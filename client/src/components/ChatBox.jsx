@@ -103,14 +103,21 @@ const ChatBox = () => {
       alert(
         "Your browser does not support speech recognition. Try Chrome on Android."
       );
+      return;
     }
 
     if (!isSpeaking) {
-      SpeechRecognition.startListening();
+      SpeechRecognition.startListening({ continuous: true }); // continuous keeps listening
+      setIsSpeaking(true);
+
+      // Automatically reset isSpeaking when listening ends (e.g., user silent)
+      SpeechRecognition.onend = () => {
+        setIsSpeaking(false);
+      };
     } else {
       SpeechRecognition.stopListening();
+      setIsSpeaking(false);
     }
-    setIsSpeaking(!isSpeaking);
   };
 
   // Add this effect in your component
