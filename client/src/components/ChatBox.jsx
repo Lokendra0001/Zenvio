@@ -12,84 +12,97 @@ const ChatBox = () => {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isMultiLine, setIsMultiLine] = useState(false);
+  const [micActive, setMicActive] = useState(false);
+
   const { serverURL } = serverObj;
   const messageEndRef = useRef(null);
   const textareaRef = useRef(null);
-  const {
-    transcript,
-    listening,
-    resetTranscript,
-    browserSupportsSpeechRecognition,
-  } = useSpeechRecognition();
 
+  const { transcript, listening, resetTranscript, browserSupportsSpeechRecognition } =
+    useSpeechRecognition();
+
+  // Send message handler
   const handleSendMessage = async () => {
+    if (!inputVal.trim()) return;
     try {
       setLoading(true);
       setMessages((prev) => [...prev, { role: "user", text: inputVal }]);
       setInputVal("");
+      // Uncomment below to call your server
       // const { data } = await axios.post(`${serverURL}/chat`, { msg: inputVal });
-      // console.log(data.reply);
       // setMessages((prev) => [...prev, { role: "system", text: data.reply }]);
     } catch (err) {
-      console.log(err);
+      console.error(err);
       setMessages((prev) => [
         ...prev,
-        {
-          role: "system",
-          text: "Something Went Wrong. try again later!",
-          color: true,
-        },
+        { role: "system", text: "Something went wrong. Try again later!", color: true },
       ]);
     } finally {
       setLoading(false);
     }
   };
 
+  // Enter key handler
   const handleKeyDown = (e) => {
-    if (e.key == "Enter" && !e.shiftKey) {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      if (inputVal?.trim()) {
-        handleSendMessage();
-      }
+      handleSendMessage();
     }
   };
 
+  // Mic toggle handler
   const handleVoiceToText = () => {
-    if (!listening) {
+    if (!browserSupportsSpeechRecognition) {
+      alert("Your browser does not support speech recognition.");
+      return;
+    }
+
+    if (!micActive) {
       resetTranscript();
+      setMicActive(true);
       SpeechRecognition.startListening({
         continuous: true,
         interimResults: true,
         language: "en-IN",
       });
+    } else {
+      setMicActive(false);
+      SpeechRecognition.stopListening();
+    }
+  };
 
-      // Safety: force listening state to stay "true" for at least a moment
-      setTimeout(() => {
-        if (!listening) {
-          // restart if it got auto-stopped
+  // Sync transcript to input
+  useEffect(() => {
+    if (micActive) {
+      setInputVal(transcript);
+
+      const handleEnd = () => {
+        // auto-restart if mic is active
+        if (micActive) {
           SpeechRecognition.startListening({
             continuous: true,
             interimResults: true,
             language: "en-IN",
           });
         }
-      }, 500);
-    } else {
-      SpeechRecognition.stopListening();
-    }
-  };
+      };
 
+      SpeechRecognition.onend = handleEnd;
+      return () => {
+        SpeechRecognition.onend = null;
+      };
+    }
+  }, [transcript, micActive]);
+
+  // Auto-scroll to bottom
   const scrollToBottom = () => {
-    messageEndRef.current.scrollIntoView({ behavior: "smooth" });
+    messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
-
-  // Keep transcript synced to input when mic is active
   useEffect(() => {
-    if (listening) {
-      setInputVal(transcript);
-    }
-  }, [transcript, listening]); // Use listening instead of micActive
+    scrollToBottom();
+  }, [messages]);
 
+  // Textarea auto-resize
   useEffect(() => {
     const textarea = textareaRef.current;
     if (textarea) {
@@ -100,70 +113,47 @@ const ChatBox = () => {
     }
   }, [inputVal]);
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
   return (
     <div className="h-full flex flex-col text-zinc-100 rounded-xl overflow-hidden pt-3">
-      {/* Messages Container */}
+      {/* Messages */}
       <div className="flex-1 overflow-y-scroll p-1 sm:p-4 space-y-6 lg:px-25">
-        {/* Empty state */}
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-zinc-400">
-            <div className="relative">
-              <div className="w-16 h-16 rounded-full flex items-center justify-center">
-                <Sparkles size={28} className="text-white" />
-              </div>
+            <div className="relative w-16 h-16 flex items-center justify-center">
+              <Sparkles size={28} className="text-white" />
             </div>
-            <p className="text-lg font-medium mb-1">
-              How can I help you today?
-            </p>
+            <p className="text-lg font-medium mb-1">How can I help you today?</p>
             <p className="text-center text-zinc-500 text-sm max-w-md">
               Ask anything or try typing "What can you do?" to get started.
             </p>
           </div>
         ) : (
-          messages.map((message, index) => (
-            <div
-              key={index}
-              className={`flex ${
-                message.role === "user" ? "justify-end" : "justify-start"
-              } group`}
-            >
+          messages.map((msg, i) => (
+            <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
               <div
-                className={`rounded-xl px-3  py-1 ${
-                  message.role === "user"
+                className={`rounded-xl px-3 py-1 ${
+                  msg.role === "user"
                     ? "bg-[#303030bd] rounded-tr-none max-w-[80%] lg:max-w-lg xl:max-w-xl"
-                    : "rounded-tl-none   xl:max-w-full"
+                    : "rounded-tl-none xl:max-w-full"
                 }`}
               >
-                <p
-                  className={`break-words whitespace-pre-line text-[14.5px] tracking-wide ${
-                    message?.color && "text-red-400"
-                  }`}
-                >
-                  {message?.color ? <>😕 {message.text}</> : message.text}
+                <p className={`break-words whitespace-pre-line text-[14.5px] tracking-wide ${msg.color && "text-red-400"}`}>
+                  {msg.color ? <>😕 {msg.text}</> : msg.text}
                 </p>
               </div>
             </div>
           ))
         )}
-        {/* Loading example */}
         {loading && (
           <div className="flex justify-start group">
             <div className="flex max-w-xs md:max-w-md lg:max-w-lg xl:max-w-xl">
               <div className="h-7 w-7 shrink-0 -translate-y-0.5 rounded-full flex items-center justify-center bg-gradient-to-br from-zinc-700 to-zinc-800 mr-1">
-                <img src={logo} alt="" className="h-full w-full" />
+                <img src={logo} alt="logo" className="h-full w-full" />
               </div>
               <div className="rounded-xl px-4 pt-2 bg-zinc-800 rounded-tl-none">
                 <div className="flex space-x-1.5">
                   {Array.from({ length: 3 }).map((_, i) => (
-                    <div
-                      key={i}
-                      className="h-2 w-2 bg-zinc-400 rounded-full animate-bounce"
-                      style={{ animationDelay: `${i * 180}ms` }}
-                    />
+                    <div key={i} className="h-2 w-2 bg-zinc-400 rounded-full animate-bounce" style={{ animationDelay: `${i * 180}ms` }} />
                   ))}
                 </div>
               </div>
@@ -172,64 +162,35 @@ const ChatBox = () => {
         )}
         <div ref={messageEndRef} />
       </div>
-      {/* Input Area */}
-      <div className="px-4 lg:px-25 mb-2 ">
-        <div className="bg-[#303030] rounded-xl  py-2 shadow-inner px-2">
-          <div
-            className={`flex ${
-              isMultiLine ? "flex-col " : " items-end"
-            }  gap-2`}
-          >
-            {/* Textarea */}
 
-            {console.log(listening)}
+      {/* Input */}
+      <div className="px-4 lg:px-25 mb-2">
+        <div className="bg-[#303030] rounded-xl py-2 shadow-inner px-2">
+          <div className={`flex ${isMultiLine ? "flex-col" : "items-end"} gap-2`}>
             <textarea
               ref={textareaRef}
               placeholder="Ask Anything..."
-              className={`w-full ${
-                !inputVal.trim() && "leading-[40px]"
-              } bg-transparent  border-none outline-none resize-none px-3 text-zinc-100
-              overflow-y-scroll min-h-[40px] max-h-[200px] break-words`}
-              rows={1}
               value={inputVal}
               onChange={(e) => setInputVal(e.target.value)}
-              onKeyDown={(e) => handleKeyDown(e)}
+              onKeyDown={handleKeyDown}
+              className={`w-full ${!inputVal.trim() && "leading-[40px]"} bg-transparent border-none outline-none resize-none px-3 text-zinc-100 overflow-y-scroll min-h-[40px] max-h-[200px] break-words`}
+              rows={1}
             />
-            {/* Action buttons */}
             <div className="flex gap-2 self-end">
               <button
-                className={`p-2  cursor-pointer transition-colors rounded-full ${
-                  listening
-                    ? "bg-red-500/20 text-red-400 " // Changed to red when active
-                    : "hover:bg-zinc-700/50 text-zinc-400 hover:text-white"
-                } `}
+                className={`p-2 cursor-pointer transition-colors rounded-full ${micActive ? "bg-red-500/20 text-red-400" : "hover:bg-zinc-700/50 text-zinc-400 hover:text-white"}`}
                 title="Voice input"
                 type="button"
                 onClick={handleVoiceToText}
               >
-                <Mic size={20} className={`${listening && "animate-pulse"}`} />
+                <Mic size={20} className={`${micActive && "animate-pulse"}`} />
               </button>
               <button
                 disabled={!inputVal?.trim()}
-                className={`p-2 rounded-full transition-all duration-100 ${
-                  inputVal?.trim()
-                    ? loading
-                      ? "bg-zinc-700"
-                      : "bg-white text-black cursor-pointer shadow-md"
-                    : "text-zinc-500 bg-zinc-700"
-                }`}
-                title="Send message"
+                className={`p-2 rounded-full transition-all duration-100 ${inputVal?.trim() ? (loading ? "bg-zinc-700" : "bg-white text-black cursor-pointer shadow-md") : "text-zinc-500 bg-zinc-700"}`}
                 onClick={handleSendMessage}
               >
-                {loading ? (
-                  <Square
-                    fill="white"
-                    size={20}
-                    className="p-0.5 cursor-pointer"
-                  />
-                ) : (
-                  <ArrowUp size={20} />
-                )}{" "}
+                {loading ? <Square fill="white" size={20} className="p-0.5 cursor-pointer" /> : <ArrowUp size={20} />}
               </button>
             </div>
           </div>
