@@ -99,6 +99,12 @@ const ChatBox = () => {
   }, [inputVal]);
 
   const handleVoiceToText = () => {
+    if (!browserSupportsSpeechRecognition) {
+      alert(
+        "Your browser does not support speech recognition. Try Chrome on Android."
+      );
+    }
+
     if (!isSpeaking) {
       SpeechRecognition.startListening();
     } else {

@@ -5,7 +5,7 @@ const chatRoute = require('./routes/chatroutes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const allowedOrigin = ["http://localhost:5173", "https://zenvio-server.onrender.com"]
+const allowedOrigin = ["http://localhost:5173", "https://zenvio-five.vercel.app"]
 app.use(cors(
     {
         origin: allowedOrigin

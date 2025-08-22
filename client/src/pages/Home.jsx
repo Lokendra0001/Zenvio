@@ -6,7 +6,7 @@ import ChatBox from "../components/ChatBox";
 
 const Home = () => {
   return (
-    <div className="w-full h-screen bg-zinc-900 grid grid-cols-1 md:grid-cols-5 text-white">
+    <div className="w-full h-[100dvh] bg-zinc-900 grid grid-cols-1 md:grid-cols-5 text-white">
       {/* Left Sidebar */}
       <div className="hidden md:block border-r border-zinc-700  ">
         {/* Sidebar content */}
