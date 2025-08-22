@@ -54,27 +54,30 @@ const ChatBox = () => {
     }
   };
 
-  const [micActive, setMicActive] = useState(false);
-
   const handleVoiceToText = () => {
-    if (!browserSupportsSpeechRecognition) return;
-
-    if (!micActive) {
+    if (!listening) {
       resetTranscript();
-      setMicActive(true);
-      SpeechRecognition.startListening({ continuous: true, language: "en-US" });
+      SpeechRecognition.startListening({
+        continuous: true,
+        interimResults: true,
+        language: "en-IN",
+      });
+
+      // Safety: force listening state to stay "true" for at least a moment
+      setTimeout(() => {
+        if (!listening) {
+          // restart if it got auto-stopped
+          SpeechRecognition.startListening({
+            continuous: true,
+            interimResults: true,
+            language: "en-IN",
+          });
+        }
+      }, 500);
     } else {
-      setMicActive(false);
       SpeechRecognition.stopListening();
     }
   };
-
-  // Auto-restart if user wants mic active
-  useEffect(() => {
-    if (micActive && !listening) {
-      SpeechRecognition.startListening({ continuous: true, language: "en-US" });
-    }
-  }, [micActive, listening]);
 
   const scrollToBottom = () => {
     messageEndRef.current.scrollIntoView({ behavior: "smooth" });
@@ -197,7 +200,7 @@ const ChatBox = () => {
               <button
                 className={`p-2  cursor-pointer transition-colors rounded-full ${
                   listening
-                    ? "bg-red-500/20 text-red-400" // Changed to red when active
+                    ? "bg-red-500/20 text-red-400 " // Changed to red when active
                     : "hover:bg-zinc-700/50 text-zinc-400 hover:text-white"
                 } `}
                 title="Voice input"
