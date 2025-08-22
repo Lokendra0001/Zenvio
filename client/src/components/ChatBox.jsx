@@ -58,15 +58,16 @@ const ChatBox = () => {
 
   const handleVoiceToText = () => {
     if (!browserSupportsSpeechRecognition) {
-      alert(
-        "Your browser does not support speech recognition. Try another browser."
-      );
+      alert("Speech recognition not supported in this browser.");
       return;
     }
 
     if (!micActive) {
       // Start mic
-      SpeechRecognition.startListening({ continuous: true });
+      SpeechRecognition.startListening({
+        continuous: false, // continuous not reliable on mobile
+        language: "en-US", // or "en-IN"
+      });
       console.log("Mic started");
       setMicActive(true);
     } else {
