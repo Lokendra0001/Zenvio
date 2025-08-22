@@ -66,7 +66,7 @@ const ChatBox = () => {
 
     if (!listening) SpeechRecognition.startListening({ continuous: true });
 
-    if (!micActive) {
+    if (!micActive && !listening) {
       SpeechRecognition.startListening();
     } else {
       SpeechRecognition.stopListening();
