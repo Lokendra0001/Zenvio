@@ -16,12 +16,8 @@ const ChatBox = () => {
   const { serverURL } = serverObj;
   const messageEndRef = useRef(null);
   const textareaRef = useRef(null);
-  const {
-    transcript,
-    listening,
-    resetTranscript,
-    browserSupportsSpeechRecognition,
-  } = useSpeechRecognition();
+  const { transcript, resetTranscript, browserSupportsSpeechRecognition } =
+    useSpeechRecognition();
 
   const handleSendMessage = async () => {
     try {
@@ -29,9 +25,9 @@ const ChatBox = () => {
 
       setMessages((prev) => [...prev, { role: "user", text: inputVal }]);
       setInputVal("");
-      // const { data } = await axios.post(`${serverURL}/chat`, { msg: inputVal });
-      // console.log(data.reply);
-      // setMessages((prev) => [...prev, { role: "system", text: data.reply }]);
+      const { data } = await axios.post(`${serverURL}/chat`, { msg: inputVal });
+      console.log(data.reply);
+      setMessages((prev) => [...prev, { role: "system", text: data.reply }]);
     } catch (err) {
       console.log(err);
       setMessages((prev) => [
@@ -64,6 +60,7 @@ const ChatBox = () => {
     }
 
     if (!isSpeaking) {
+      resetTranscript();
       SpeechRecognition.startListening();
     } else {
       SpeechRecognition.stopListening();
@@ -80,6 +77,7 @@ const ChatBox = () => {
     if (transcript) setInputVal(transcript);
   }, [transcript]);
 
+  // Keep the textarea expand as per the text
   useEffect(() => {
     const textarea = textareaRef.current;
     if (textarea) {
@@ -93,6 +91,7 @@ const ChatBox = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
   return (
     <div className="h-full flex flex-col text-zinc-100 rounded-xl overflow-hidden pt-3">
       {/* Messages Container */}
@@ -178,7 +177,8 @@ const ChatBox = () => {
               ref={textareaRef}
               placeholder="Ask Anything..."
               className={`w-full ${
-                !inputVal.trim() && "leading-[40px]"
+                (!inputVal.trim() || textareaRef.current.scrollHeight <= 40) &&
+                "leading-[40px]"
               } bg-transparent  border-none outline-none resize-none px-3 text-zinc-100
               overflow-y-scroll min-h-[40px] max-h-[200px] break-words`}
               rows={1}
@@ -190,8 +190,10 @@ const ChatBox = () => {
             {/* Action buttons */}
             <div className="flex gap-2 self-end">
               <button
-                className={`p-2 text-zinc-400 hover:text-white cursor-pointer transition-colors rounded-full hover:bg-zinc-700/50 ${
-                  isSpeaking && "bg-zinc-700"
+                className={`p-2  hover:text-white cursor-pointer transition-colors rounded-full  ${
+                  isSpeaking
+                    ? "bg-red-400/20 text-red-400"
+                    : "hover:bg-zinc-700/50 text-zinc-400"
                 }`}
                 title="Voice input"
                 type="button"
@@ -199,10 +201,9 @@ const ChatBox = () => {
               >
                 <Mic
                   size={20}
-                  className={`${isSpeaking && "animate-pulse text-zinc-300"}`}
+                  className={`${isSpeaking && "animate-pulse text-red-400 "}`}
                 />
               </button>
-              {console.log(listening)}
 
               <button
                 disabled={!inputVal?.trim()}

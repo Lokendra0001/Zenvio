@@ -1,8 +1,9 @@
 import React from "react";
-import { EditIcon, HistoryIcon, User } from "lucide-react";
+import { EditIcon, HistoryIcon, Link, User } from "lucide-react";
 import { FaHistory } from "react-icons/fa";
 import logo from "../assests/images/logo.jpg";
 import ChatBox from "../components/ChatBox";
+import { Links, NavLink } from "react-router-dom";
 
 const Home = () => {
   return (
@@ -32,10 +33,13 @@ const Home = () => {
 
       {/* Right Content (Header + ChatBox) */}
       <div className="h-[100dvh] flex flex-col  col-span-1 md:col-span-4  bg-gradient-to-br from-zinc-900 to-zinc-800 ">
-        <div className="h-[9dvh]  flex justify-end items-center px-3 py-2.5">
-          <button className="px-3 h-full bg-zinc-700 hover:bg-zinc-600 cursor-pointer rounded-md font-medium text-sm">
+        <div className="h-[9dvh]  flex justify-end items-center px-3 py-2.5  shadow-sm">
+          <NavLink
+            to={"/login"}
+            className="px-3 h-full grid place-items-center bg-zinc-700 hover:bg-zinc-600 cursor-pointer rounded-md font-medium text-sm"
+          >
             Sign in
-          </button>
+          </NavLink>
         </div>
         <div className="flex-1 overflow-hidden">
           <ChatBox />
