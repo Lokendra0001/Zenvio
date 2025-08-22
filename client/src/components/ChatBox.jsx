@@ -103,22 +103,15 @@ const ChatBox = () => {
       alert(
         "Your browser does not support speech recognition. Try Chrome on Android."
       );
-      return;
     }
 
-    if (!listening) {
-      // Start listening continuously
-      SpeechRecognition.startListening({ continuous: true });
+    if (!isSpeaking) {
+      SpeechRecognition.startListening();
     } else {
-      // Stop listening
       SpeechRecognition.stopListening();
     }
+    setIsSpeaking(!isSpeaking);
   };
-
-  // Keep your mic button state in sync
-  useEffect(() => {
-    setIsSpeaking(listening);
-  }, [listening]);
 
   // Add this effect in your component
   useEffect(() => {
