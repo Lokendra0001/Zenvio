@@ -59,20 +59,22 @@ const ChatBox = () => {
   const handleVoiceToText = () => {
     if (!browserSupportsSpeechRecognition) {
       alert(
-        "Your browser does not support speech recognition. Try other browser."
+        "Your browser does not support speech recognition. Try another browser."
       );
       return;
     }
 
-    if (!listening) SpeechRecognition.startListening({ continuous: true });
-
     if (!micActive) {
-      SpeechRecognition.startListening();
+      // Start mic
+      SpeechRecognition.startListening({ continuous: true });
+      console.log("Mic started");
+      setMicActive(true);
     } else {
+      // Stop mic
       SpeechRecognition.stopListening();
+      console.log("Mic stopped");
+      setMicActive(false);
     }
-
-    setMicActive(!micActive);
   };
 
   const scrollToBottom = () => {
