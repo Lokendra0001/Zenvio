@@ -1,6 +1,12 @@
 import { ArrowRight, EyeClosed, EyeIcon, LogIn } from "lucide-react";
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import axios from "axios";
+import serverObj from "../config/serverObj";
+import { handleErrorMsg, handleSuccessMsg } from "../config/toast";
+import { useDispatch } from "react-redux";
+import { addUser } from "../store/slices/userSlice";
 
 const fields = [
   {
@@ -27,14 +33,25 @@ const fields = [
 ];
 
 const Signup = () => {
-  const [data, setData] = useState({ fullName: "", email: "", password: "" });
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm();
   const [isPass, setIsPass] = useState(true);
+  const { serverURL } = serverObj;
+  const dispatch = useDispatch();
 
-  const handleChange = (e) =>
-    setData({ ...data, [e.target.name]: e.target.value });
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log(data);
+  const handleSignUp = async (data) => {
+    try {
+      const res = await axios.post(`${serverURL}/user/signup`, data, {
+        withCredentials: true,
+      });
+      handleSuccessMsg(res.data.msg);
+      dispatch(addUser(res.data.user));
+    } catch (err) {
+      handleErrorMsg(err.response.data.msg);
+    }
   };
 
   return (
@@ -50,7 +67,7 @@ const Signup = () => {
           <p className="text-zinc-400">Create your account to get started</p>
         </div>
 
-        <form className="space-y-2" onSubmit={handleSubmit}>
+        <form className="space-y-2" onSubmit={handleSubmit(handleSignUp)}>
           {fields.map(({ label, id, type, placeholder, autoComplete }) => (
             <div key={id} className="relative">
               <label className="ml-1 inline-block mb-1 text-sm font-medium text-zinc-300">
@@ -58,28 +75,31 @@ const Signup = () => {
               </label>
               <input
                 id={id}
-                name={id}
                 type={id === "password" && !isPass ? "text" : type}
+                placeholder={placeholder}
                 autoComplete={autoComplete}
-                value={data[id]}
-                onChange={handleChange}
+                {...register(id, { required: `${label} is required` })}
                 className="appearance-none block w-full px-3 py-2.5 border border-zinc-600 rounded-md shadow-sm placeholder-zinc-400 bg-zinc-700 text-zinc-100 focus:outline-none focus:ring-zinc-500 focus:border-zinc-500 sm:text-sm"
               />
               {id === "password" && (
                 <button
                   type="button"
-                  className="absolute right-3 top-1/2 mt-1  text-zinc-400 cursor-pointer"
+                  className="absolute right-3 top-1/2 mt-1 text-zinc-400 cursor-pointer"
                   onClick={() => setIsPass(!isPass)}
                 >
                   {isPass ? <EyeClosed size={20} /> : <EyeIcon size={20} />}
                 </button>
               )}
+              {errors[id] && (
+                <p className="text-red-400 text-xs mt-1">
+                  {errors[id]?.message}
+                </p>
+              )}
             </div>
           ))}
 
           <label className="flex items-center text-sm text-zinc-300 my-3">
-            <input type="checkbox" className="mr-2 accent-zinc-500" required />I
-            agree to{" "}
+            <input type="checkbox" className="mr-2 accent-zinc-500" />I agree to{" "}
             <a
               href="#"
               className="underline text-zinc-400 hover:text-zinc-200 ml-1"
@@ -88,7 +108,7 @@ const Signup = () => {
             </a>
           </label>
 
-          <button className="w-full flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-zinc-600 to-zinc-700 hover:from-zinc-700 hover:to-zinc-800 text-white rounded-lg shadow-md">
+          <button className="w-full flex items-center justify-center transition-all gap-2 py-3 bg-gradient-to-r from-zinc-600 to-zinc-700 hover:from-zinc-700 hover:to-zinc-800 text-white hover:translate-y-0.5 cursor-pointer rounded-lg shadow-md">
             <LogIn size={18} /> Create Account <ArrowRight size={16} />
           </button>
         </form>
