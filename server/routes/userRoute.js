@@ -2,6 +2,7 @@ const { Router } = require('express');
 const User = require('../models/user_model');
 const { generateTokenAndSendCookie } = require('../utils/auth');
 const checkAuthentication = require('../middlewares/auth');
+const passport = require('../utils/passportConfig');
 const route = Router();
 
 route.post('/signup', async (req, res) => {
@@ -40,6 +41,7 @@ route.post('/signin', async (req, res) => {
     }
 })
 
+
 route.get('/getCurrentUser', checkAuthentication, async (req, res) => {
     try {
 
@@ -54,5 +56,44 @@ route.get('/getCurrentUser', checkAuthentication, async (req, res) => {
         return res.status(500).json({ msg: err.message })
     }
 })
+
+// Trigger Google login
+route.get("/google-login", passport.authenticate("google", { scope: ["profile", "email"] }));
+
+// Google OAuth callback
+route.get(
+    "/google/callback",
+    passport.authenticate("google", { failureRedirect: "/user/google-login/failed" }),
+    async (req, res) => {
+        try {
+            const profile = req.user;
+
+            let user = await User.findOne({ userGoogleId: profile?.id });
+
+            if (!user) {
+                user = await User.create({
+                    fullName: profile.displayName,
+                    userGoogleId: profile.id,
+                    email: profile.emails?.[0]?.value || null
+                });
+            }
+
+            // Generate JWT cookie
+            generateTokenAndSendCookie(req, res, user);
+
+            // Redirect to frontend after login
+            res.redirect(`http://localhost:5173/?login=success`);
+        } catch (err) {
+            console.error(err);
+            res.redirect(`http://localhost:5173/?login=failed`);
+        }
+    }
+);
+
+
+// Login failed
+route.get("/google-login/failed", (req, res) => {
+    res.status(401).json({ msg: "Google login failed" });
+});
 
 module.exports = route;

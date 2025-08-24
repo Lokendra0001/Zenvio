@@ -20,12 +20,10 @@ const Home = () => {
               to="/profile"
               className="px-3 h-full flex items-center gap-2 cursor-pointer rounded-md font-medium text-sm hover:bg-zinc-700/50 transition-colors"
             >
-              <div className="w-8 h-8 flex items-center justify-center rounded-full bg-gradient-to-br from-zinc-500 to-zinc-700 text-white shadow-md">
+              <div className="w-8 h-8 flex items-center justify-center rounded-full bg-gradient-to-br from-zinc-500 to-zinc-700 text-white shadow-sm">
                 {user.fullName.charAt(0).toUpperCase()}
               </div>
-              <span className="hidden sm:inline">
-                {user.fullName.split(" ")[0]}
-              </span>
+              <span className="inline">{user.fullName.split(" ")[0]}</span>
             </NavLink>
           ) : (
             <NavLink

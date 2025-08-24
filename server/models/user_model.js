@@ -8,21 +8,27 @@ const userSchema = new Schema({
     },
     email: {
         type: String,
-        required: true,
+        default: null
     },
     password: {
         type: String,
-        required: true,
+        default: null
     },
+    userGoogleId: {
+        type: String,
+        default: null
+    }
 }, { timestamps: true });
 
 userSchema.pre('save', async function (next) {
+    if (!this.password) return next();
     const hashedPass = await bcrypt.hash(this.password, 10);
     this.password = hashedPass;
     next();
 });
 
 userSchema.methods.verifyPassword = async function (userInput) {
+    if (!this.password) return false;
     return await bcrypt.compare(userInput, this.password);
 }
 

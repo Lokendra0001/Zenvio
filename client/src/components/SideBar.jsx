@@ -8,7 +8,7 @@ const SideBar = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   const sidebarContent = (
-    <div className="flex flex-col border-r border-zinc-700 h-full">
+    <div className="flex flex-col  border-r border-zinc-700 h-full">
       {/* Logo & NewChat */}
       <div className="border-b border-zinc-700 flex justify-between items-center h-[9dvh] px-4 pl-2">
         <span className="text-xl font-medium flex gap-1.5 items-center">
@@ -59,10 +59,12 @@ const SideBar = () => {
   return (
     <>
       {/* Desktop sidebar */}
-      <div className="hidden md:flex w-64">{sidebarContent}</div>
+      <div className="hidden md:flex ">{sidebarContent}</div>
 
       {/* Mobile sidebar toggle */}
-      <div className={`md:hidden fixed top-4 left-3 ${isOpen && "hidden"} z-50`}>
+      <div
+        className={`md:hidden fixed top-4 left-3 ${isOpen && "hidden"} z-50`}
+      >
         <button
           onClick={() => setIsOpen(!isOpen)}
           className=" text-zinc-400 hover:text-zinc-300 shadow-lg backdrop-blur-md  transition"
@@ -73,8 +75,14 @@ const SideBar = () => {
 
       {/* Mobile sidebar drawer */}
       {isOpen && (
-        <div className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm flex">
-          <div className="w-70 bg-zinc-900 h-full shadow-xl p-2">
+        <div
+          className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm flex"
+          onClick={() => setIsOpen(false)}
+        >
+          <div
+            className="w-[85%] bg-zinc-900 h-full shadow-xl p-2"
+            onClick={(e) => e.stopPropagation()}
+          >
             {sidebarContent}
           </div>
         </div>

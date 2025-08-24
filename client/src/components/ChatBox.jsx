@@ -22,6 +22,8 @@ const ChatBox = () => {
   const handleSendMessage = async () => {
     try {
       setLoading(true);
+      SpeechRecognition.stopListening();
+      setIsSpeaking(false);
 
       setMessages((prev) => [...prev, { role: "user", text: inputVal }]);
       setInputVal("");
@@ -221,7 +223,7 @@ const ChatBox = () => {
                   <Square
                     fill="white"
                     size={20}
-                    className="p-0.5 cursor-pointer"
+                    className="p-0.5 cursor-pointer animate-pulse"
                   />
                 ) : (
                   <ArrowUp size={20} />
