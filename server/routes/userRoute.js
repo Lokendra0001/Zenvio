@@ -82,10 +82,10 @@ route.get(
             generateTokenAndSendCookie(req, res, user);
 
             // Redirect to frontend after login
-            res.redirect(`http://localhost:5173/?login=success`);
+            res.redirect(`https://zenvio-five.vercel.app/?login=success`);
         } catch (err) {
             console.error(err);
-            res.redirect(`http://localhost:5173/?login=failed`);
+            res.redirect(`https://zenvio-five.vercel.app/?login=failed`);
         }
     }
 );
