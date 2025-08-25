@@ -103,9 +103,9 @@ route.get(
             console.log("HELLO")
 
             // Redirect to frontend after login
-            res.redirect(`http://localhost:5173/?login=success1`);
+            //res.redirect(`http://localhost:5173/?login=success1`);
             // res.send("HELLO")
-            // res.redirect(`https://zenvio-five.vercel.app/?login=success`);
+            res.redirect(`https://zenvio-five.vercel.app/?login=success`);
         } catch (err) {
             console.error(err);
             res.redirect(`https://zenvio-five.vercel.app/?login=failed`);
