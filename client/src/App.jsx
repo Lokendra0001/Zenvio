@@ -6,7 +6,7 @@ import Signup from "./pages/Signup";
 import { Toaster } from "react-hot-toast";
 import { useDispatch } from "react-redux";
 import serverObj from "./config/serverObj";
-import { addUser, removeUser } from "./store/slices/userSlice";
+import { addUser, logoutUser } from "./store/slices/userSlice";
 import axios from "axios";
 import { handleSuccessMsg } from "./config/toast";
 
@@ -24,7 +24,7 @@ const App = () => {
         dispatch(addUser(res.data.user));
         handleSuccessMsg(res.data.msg);
       } catch (err) {
-        dispatch(removeUser());
+        dispatch(logoutUser());
         console.log(err);
       } finally {
         setTimeout(() => {
@@ -68,7 +68,7 @@ const App = () => {
         position="top-center"
         toastOptions={{
           className: "text-sm rounded-md shadow-lg ",
-          duration: 1500,
+          duration: 2000,
           style: {
             background: "#3f3f46",
             color: "#fff",

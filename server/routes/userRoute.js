@@ -56,6 +56,26 @@ route.get('/getCurrentUser', checkAuthentication, async (req, res) => {
         return res.status(500).json({ msg: err.message })
     }
 })
+route.get('/logout', checkAuthentication, async (req, res) => {
+    try {
+
+        res.clearCookie("connect.sid", {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: process.env.NODE_ENV === "production" ? "none" : "lax"
+        });
+        res.clearCookie("cookie_z8y4r1", {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: process.env.NODE_ENV === "production" ? "none" : "lax"
+        });
+        return res.status(200).json({ msg: "Logout Successfully!" });
+
+    } catch (err) {
+        return res.status(500).json({ msg: err.message });
+    }
+});
+
 
 // Trigger Google login
 route.get("/google-login", passport.authenticate("google", { scope: ["profile", "email"] }));
@@ -80,9 +100,12 @@ route.get(
 
             // Generate JWT cookie
             generateTokenAndSendCookie(req, res, user);
+            console.log("HELLO")
 
             // Redirect to frontend after login
-            res.redirect(`https://zenvio-five.vercel.app/?login=success`);
+            res.redirect(`http://localhost:5173/?login=success1`);
+            // res.send("HELLO")
+            // res.redirect(`https://zenvio-five.vercel.app/?login=success`);
         } catch (err) {
             console.error(err);
             res.redirect(`https://zenvio-five.vercel.app/?login=failed`);
