@@ -64,7 +64,7 @@ const SideBar = () => {
       </div>
 
       {/* History Locked */}
-      {!user && (
+      {!user ? (
         <div className="p-4 flex-1 flex items-center justify-center">
           <div className="text-center max-w-xs p-6 rounded-xl bg-white/5 backdrop-blur-md border border-white/10 flex flex-col items-center justify-center relative overflow-hidden shadow-lg">
             <div className="absolute inset-0 bg-gradient-to-r from-zinc-600/20 via-zinc-400/10 to-zinc-600/20 animate-shine opacity-50 rounded-xl pointer-events-none"></div>
@@ -88,9 +88,7 @@ const SideBar = () => {
             </NavLink>
           </div>
         </div>
-      )}
-
-      {history.length > 0 ? (
+      ) : history.length > 0 ? (
         <div className="grid gap-2 p-2">
           {history.map((item, i) => (
             <div
