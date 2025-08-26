@@ -4,6 +4,7 @@ const { generateTokenAndSendCookie } = require('../utils/auth');
 const checkAuthentication = require('../middlewares/auth');
 const passport = require('../utils/passportConfig');
 const route = Router();
+const nanoId = require('nanoid')
 
 route.post('/signup', async (req, res) => {
     try {
@@ -112,6 +113,49 @@ route.get(
         }
     }
 );
+
+route.get('/getHistory', checkAuthentication, async (req, res) => {
+    try {
+        const { _id } = req.user;
+        const { history } = await User.findById(_id);
+        res.status(200).json(history);
+    } catch (err) {
+        return res.status(500).json({ msg: err.message });
+
+    }
+})
+
+route.post('/addHistory', checkAuthentication, async (req, res) => {
+    const { chatId, messages } = req.body; // full array old+new
+    const user = await User.findById(req.user._id);
+
+
+
+    // Find existing chat by chatId
+    const chatIndex = user.history.findIndex(c => c.chatId === chatId);
+
+    if (chatIndex !== -1) {
+        console.log(messages)
+        // Replace the messages array with new full array
+        user.history[chatIndex].chats = messages.map(m => ({
+            sender: m.sender,
+            msg: m.msg,
+        }));
+    } else {
+        // If chat not exist, create a new one
+        user.history.push({
+            chatId: nanoId.nanoid(),
+            chats: messages.map(m => ({
+                sender: m.sender,
+                msg: m.msg,
+
+            }))
+        });
+    }
+
+    await user.save();
+    res.status(200).json({ success: true, history: user.history });
+});
 
 
 // Login failed

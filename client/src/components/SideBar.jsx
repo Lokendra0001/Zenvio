@@ -1,13 +1,44 @@
 import { EditIcon, LockKeyhole, Menu, X } from "lucide-react";
 import { HiOutlineMenuAlt2 } from "react-icons/hi";
-import React, { useState } from "react";
+import React, { useDebugValue, useState } from "react";
 import { NavLink } from "react-router-dom";
 import logo from "../assests/images/logo.jpg";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { useEffect } from "react";
+import axios from "axios";
+import serverObj from "../config/serverObj";
+import { toggleNewChat } from "../store/slices/newChatSlice";
+import { addHistory } from "../store/slices/selectedHistory";
 
 const SideBar = () => {
+  const [history, setHistory] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
   const user = useSelector((state) => state.auth.user);
+  const { serverURL } = serverObj;
+  const dispatch = useDispatch();
+
+  const handleFetchAllHistory = async () => {
+    try {
+      const { data } = await axios.get(`${serverURL}/user/getHistory`, {
+        withCredentials: true,
+      });
+      setHistory([...data].reverse());
+      console.log(data);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const handleNewChat = () => {
+    dispatch(toggleNewChat());
+    setTimeout(() => {
+      handleFetchAllHistory();
+    }, 1000);
+  };
+
+  useEffect(() => {
+    handleFetchAllHistory();
+  }, []);
 
   const sidebarContent = (
     <div className="flex flex-col w-full border-r border-zinc-700 h-full">
@@ -20,6 +51,7 @@ const SideBar = () => {
           <EditIcon
             size={20}
             className="text-gray-300 font-bold hover:text-white cursor-pointer"
+            onClick={handleNewChat}
           />
           {isOpen && (
             <X
@@ -55,6 +87,29 @@ const SideBar = () => {
               Sign In
             </NavLink>
           </div>
+        </div>
+      )}
+
+      {history.length > 0 ? (
+        <div className="grid gap-2 p-2">
+          {history.map((item, i) => (
+            <div
+              key={i}
+              className="py-2 px-2 border-b rounded-md border-zinc-800 hover:bg-white/5 cursor-pointer transition-colors "
+              onClick={() => {
+                dispatch(addHistory(history[i]));
+              }}
+            >
+              <p className="text-zinc-200 text-sm font-medium mb-1.5 line-clamp-1">
+                {item.chats[0]?.msg.charAt(0).toUpperCase() +
+                  item.chats[0]?.msg.slice(1) || "New conversation"}
+              </p>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="flex items-center justify-center h-full">
+          <p className="text-zinc-500 text-sm">No chat history yet</p>
         </div>
       )}
     </div>

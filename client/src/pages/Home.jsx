@@ -56,7 +56,6 @@ const Home = () => {
                   <LogOut size={17} className="animate-pulse" /> LogOut
                 </button>
               )}
-              {console.log(showLogout)}
             </div>
           ) : (
             <NavLink

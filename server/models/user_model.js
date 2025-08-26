@@ -1,5 +1,6 @@
 const { Schema, model } = require('mongoose')
-const bcrypt = require('bcrypt')
+const bcrypt = require('bcrypt');
+
 
 const userSchema = new Schema({
     fullName: {
@@ -17,7 +18,17 @@ const userSchema = new Schema({
     userGoogleId: {
         type: String,
         default: null
-    }
+    },
+    history: [{
+        chatId: String,
+        chats: [
+            {
+                sender: String,
+                msg: String
+            }
+        ],
+
+    }]
 }, { timestamps: true });
 
 userSchema.pre('save', async function (next) {

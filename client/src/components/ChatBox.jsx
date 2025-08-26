@@ -6,6 +6,8 @@ import serverObj from "../config/serverObj";
 import SpeechRecognition, {
   useSpeechRecognition,
 } from "react-speech-recognition";
+import { useDispatch, useSelector } from "react-redux";
+import { toggleNewChat } from "../store/slices/newChatSlice";
 
 const ChatBox = () => {
   const [inputVal, setInputVal] = useState("");
@@ -13,11 +15,15 @@ const ChatBox = () => {
   const [loading, setLoading] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isMultiLine, setIsMultiLine] = useState(false);
+  const [chatId, setChatId] = useState(null);
   const { serverURL } = serverObj;
   const messageEndRef = useRef(null);
   const textareaRef = useRef(null);
   const { transcript, resetTranscript, browserSupportsSpeechRecognition } =
     useSpeechRecognition();
+  const isNewChat = useSelector((state) => state.newChat.isNewChat);
+  const selectedHistory = useSelector((state) => state.selectedHistory.history);
+  const dispatch = useDispatch();
 
   const handleSendMessage = async () => {
     try {
@@ -25,23 +31,41 @@ const ChatBox = () => {
       SpeechRecognition.stopListening();
       setIsSpeaking(false);
 
-      setMessages((prev) => [...prev, { role: "user", text: inputVal }]);
+      setMessages((prev) => [...prev, { sender: "user", msg: inputVal }]);
       setInputVal("");
       const { data } = await axios.post(`${serverURL}/chat`, { msg: inputVal });
-      console.log(data.reply);
-      setMessages((prev) => [...prev, { role: "system", text: data.reply }]);
+
+      setMessages((prev) => [...prev, { sender: "system", msg: data.reply }]);
     } catch (err) {
       console.log(err);
       setMessages((prev) => [
         ...prev,
         {
-          role: "system",
-          text: "Something Went Wrong. try again later!",
+          sender: "system",
+          msg: "Something Went Wrong. try again later!",
           color: true,
         },
       ]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleNewChat = async () => {
+    try {
+      await axios.post(
+        `${serverURL}/user/addHistory`,
+        { chatId: selectedHistory?.chatId || null, messages },
+        {
+          withCredentials: true,
+        }
+      );
+
+      setMessages([]);
+    } catch (err) {
+      console.log(err);
+    } finally {
+      dispatch(toggleNewChat());
     }
   };
 
@@ -94,6 +118,29 @@ const ChatBox = () => {
     scrollToBottom();
   }, [messages]);
 
+  useEffect(() => {
+    if (isNewChat == true) {
+      setChatId(null);
+      handleNewChat();
+    }
+  }, [isNewChat]);
+
+  useEffect(() => {
+    if (selectedHistory) {
+      setChatId(selectedHistory.chatId);
+      setMessages(selectedHistory.chats);
+    }
+  }, [selectedHistory]);
+
+  // useEffect(() => {
+  //   window.addEventListener("beforeunload", handleNewChat);
+
+  //   // Cleanup on unmount
+  //   return () => {
+  //     window.removeEventListener("beforeunload", handleNewChat);
+  //   };
+  // }, []);
+
   return (
     <div className="h-full flex flex-col text-zinc-100 rounded-xl overflow-hidden pt-3">
       {/* Messages Container */}
@@ -119,12 +166,12 @@ const ChatBox = () => {
             <div
               key={index}
               className={`flex ${
-                message.role === "user" ? "justify-end" : "justify-start"
+                message?.sender === "user" ? "justify-end" : "justify-start"
               } group`}
             >
               <div
                 className={`rounded-xl px-3  py-1 ${
-                  message.role === "user"
+                  message?.sender === "user"
                     ? "bg-[#303030bd] rounded-tr-none max-w-[80%] lg:max-w-lg xl:max-w-xl"
                     : "rounded-tl-none   xl:max-w-full"
                 }`}
@@ -134,7 +181,7 @@ const ChatBox = () => {
                     message?.color && "text-red-400"
                   }`}
                 >
-                  {message?.color ? <>😕 {message.text}</> : message.text}
+                  {message?.color ? <>😕 {message.msg}</> : message.msg}
                 </p>
               </div>
             </div>
