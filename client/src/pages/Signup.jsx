@@ -1,4 +1,4 @@
-import { ArrowRight, EyeClosed, EyeIcon, LogIn } from "lucide-react";
+import { ArrowRight, EyeClosed, EyeIcon, LogIn, Loader2 } from "lucide-react";
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
