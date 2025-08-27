@@ -3,8 +3,7 @@ import { createSlice } from "@reduxjs/toolkit";
 const selectedHistory = createSlice({
     name: 'selectedHistory',
     initialState: {
-        history: null,
-        isHistory: false
+        history: null
     },
     reducers: {
         addHistory: (store, action) => {

@@ -8,6 +8,7 @@ import axios from "axios";
 import serverObj from "../config/serverObj";
 import { handleErrorMsg, handleSuccessMsg } from "../config/toast";
 import { logoutUser } from "../store/slices/userSlice";
+import { addHistory } from "../store/slices/selectedHistory";
 
 const Home = () => {
   const user = useSelector((state) => state.auth.user);
@@ -22,6 +23,7 @@ const Home = () => {
       });
       handleSuccessMsg(res.data.msg);
       dispatch(logoutUser());
+      dispatch(addHistory(null));
     } catch (error) {
       handleErrorMsg(error.message);
     }

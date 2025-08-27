@@ -139,7 +139,7 @@ const ChatBox = () => {
   useEffect(() => {
     if (selectedHistory) {
       setChatId(selectedHistory.chatId);
-      setMessages(selectedHistory.chats);
+      if (user) setMessages(selectedHistory.chats);
     }
   }, [selectedHistory]);
 
@@ -173,6 +173,13 @@ const ChatBox = () => {
     }
     return () => window.removeEventListener("beforeunload", handleUnload);
   }, [serverURL]); // only depends on serverURL, not messages
+
+  useEffect(() => {
+    if (!user) {
+      setMessages([]);
+      setChatId(null);
+    }
+  }, [user]);
 
   return (
     <div className="h-full flex flex-col text-zinc-100 rounded-xl overflow-hidden pt-3">

@@ -1,6 +1,6 @@
 import { ArrowRight, EyeClosed, EyeIcon, LogIn } from "lucide-react";
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import axios from "axios";
 import serverObj from "../config/serverObj";
@@ -39,18 +39,26 @@ const Signup = () => {
     formState: { errors },
   } = useForm();
   const [isPass, setIsPass] = useState(true);
+  const [loading, setLoading] = useState(false);
+
   const { serverURL } = serverObj;
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const handleSignUp = async (data) => {
     try {
+      setLoading(true);
       const res = await axios.post(`${serverURL}/user/signup`, data, {
         withCredentials: true,
       });
       handleSuccessMsg(res.data.msg);
       dispatch(addUser(res.data.user));
+
+      navigate("/");
     } catch (err) {
       handleErrorMsg(err.response.data.msg);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -109,7 +117,16 @@ const Signup = () => {
           </label>
 
           <button className="w-full flex items-center justify-center transition-all gap-2 py-3 bg-gradient-to-r from-zinc-600 to-zinc-700 hover:from-zinc-700 hover:to-zinc-800 text-white hover:translate-y-0.5 cursor-pointer rounded-lg shadow-md">
-            <LogIn size={18} /> Create Account <ArrowRight size={16} />
+            {loading ? (
+              <span className="flex items-center justify-center gap-2">
+                <Loader2 className="animate-spin" size={18} /> Creating
+                account...{" "}
+              </span>
+            ) : (
+              <span className="flex items-center gap-2 justify-center ">
+                <LogIn size={18} /> Create Account
+              </span>
+            )}
           </button>
         </form>
 
