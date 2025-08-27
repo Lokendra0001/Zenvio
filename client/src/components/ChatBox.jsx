@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Mic, Sparkles, ArrowUp, Square } from "lucide-react";
-import logo from "../assests/images/logo3.png";
+import logo from "../assests/images/logo4.png";
 import axios from "axios";
 import serverObj from "../config/serverObj";
 import SpeechRecognition, {
@@ -8,6 +8,7 @@ import SpeechRecognition, {
 } from "react-speech-recognition";
 import { useDispatch, useSelector } from "react-redux";
 import { toggleNewChat } from "../store/slices/newChatSlice";
+import { handleErrorMsg } from "../config/toast";
 
 const ChatBox = () => {
   const [inputVal, setInputVal] = useState("");
@@ -19,11 +20,17 @@ const ChatBox = () => {
   const { serverURL } = serverObj;
   const messageEndRef = useRef(null);
   const textareaRef = useRef(null);
+
   const { transcript, resetTranscript, browserSupportsSpeechRecognition } =
     useSpeechRecognition();
   const isNewChat = useSelector((state) => state.newChat.isNewChat);
   const selectedHistory = useSelector((state) => state.selectedHistory.history);
+  const user = useSelector((state) => state.auth.user);
   const dispatch = useDispatch();
+
+  // create refs to hold always-latest values
+  const messagesRef = useRef(messages);
+  const selectedHistoryRef = useRef(selectedHistory);
 
   const handleSendMessage = async () => {
     try {
@@ -33,11 +40,13 @@ const ChatBox = () => {
 
       setMessages((prev) => [...prev, { sender: "user", msg: inputVal }]);
       setInputVal("");
-      const { data } = await axios.post(`${serverURL}/chat`, { msg: inputVal });
+      const { data } = await axios.post(`${serverURL}/chat/sendMessage`, {
+        msg: inputVal,
+      });
 
       setMessages((prev) => [...prev, { sender: "system", msg: data.reply }]);
     } catch (err) {
-      console.log(err);
+      handleErrorMsg(err.message);
       setMessages((prev) => [
         ...prev,
         {
@@ -52,20 +61,22 @@ const ChatBox = () => {
   };
 
   const handleNewChat = async () => {
-    try {
-      await axios.post(
-        `${serverURL}/user/addHistory`,
-        { chatId: selectedHistory?.chatId || null, messages },
-        {
-          withCredentials: true,
-        }
-      );
+    if (user) {
+      try {
+        await axios.post(
+          `${serverURL}/chat/addHistory`,
+          { chatId: chatId || null, messages },
+          {
+            withCredentials: true,
+          }
+        );
 
-      setMessages([]);
-    } catch (err) {
-      console.log(err);
-    } finally {
-      dispatch(toggleNewChat());
+        setMessages([]);
+      } catch (err) {
+        handleErrorMsg(err.message);
+      } finally {
+        dispatch(toggleNewChat());
+      }
     }
   };
 
@@ -132,14 +143,36 @@ const ChatBox = () => {
     }
   }, [selectedHistory]);
 
-  // useEffect(() => {
-  //   window.addEventListener("beforeunload", handleNewChat);
+  // keep refs in sync with state
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
 
-  //   // Cleanup on unmount
-  //   return () => {
-  //     window.removeEventListener("beforeunload", handleNewChat);
-  //   };
-  // }, []);
+  useEffect(() => {
+    selectedHistoryRef.current = selectedHistory;
+  }, [selectedHistory]);
+
+  // add unload listener only once
+  useEffect(() => {
+    const handleUnload = () => {
+      if (messagesRef.current.length > 0) {
+        const payload = JSON.stringify({
+          chatId: selectedHistoryRef.current?.chatId || null,
+          messages: messagesRef.current,
+        });
+
+        navigator.sendBeacon(
+          `${serverURL}/chat/addHistory`,
+          new Blob([payload], { type: "application/json" })
+        );
+      }
+    };
+
+    if (user) {
+      window.addEventListener("beforeunload", handleUnload);
+    }
+    return () => window.removeEventListener("beforeunload", handleUnload);
+  }, [serverURL]); // only depends on serverURL, not messages
 
   return (
     <div className="h-full flex flex-col text-zinc-100 rounded-xl overflow-hidden pt-3">
@@ -192,7 +225,7 @@ const ChatBox = () => {
         {loading && (
           <div className="flex justify-start group">
             <div className="flex max-w-xs md:max-w-md lg:max-w-lg xl:max-w-xl">
-              <div className="h-7 w-7 shrink-0 -translate-y-0.5 rounded-full flex items-center justify-center bg-gradient-to-br from-zinc-700 to-zinc-800 mr-1">
+              <div className="h-7 w-7 p-1.5 shrink-0 -translate-y-0.5 rounded-full flex items-center justify-center bg-gradient-to-br from-zinc-700 to-zinc-800 mr-1">
                 <img src={logo} alt="" className="h-full w-full" />
               </div>
               <div className="rounded-xl px-4 pt-2 bg-zinc-800 rounded-tl-none">

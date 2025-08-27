@@ -3,6 +3,7 @@ import {
   ChevronRight,
   EyeClosed,
   EyeIcon,
+  Loader2,
   LogIn,
 } from "lucide-react";
 import React, { useState } from "react";
@@ -38,12 +39,14 @@ const Login = () => {
     formState: { errors },
   } = useForm();
   const [isPass, setIsPass] = useState(true);
+  const [loading, setLoading] = useState(true);
   const { serverURL } = serverObj;
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
   const handleLogin = async (data) => {
     try {
+      setLoading(true);
       const res = await axios.post(`${serverURL}/user/signin`, data, {
         withCredentials: true,
       });
@@ -53,6 +56,8 @@ const Login = () => {
       navigate("/");
     } catch (err) {
       handleErrorMsg(err.response?.data?.msg || "Login failed");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -115,8 +120,16 @@ const Login = () => {
             </a>
           </div>
 
-          <button className="w-full flex items-center justify-center transition-all gap-2 py-3 bg-gradient-to-r from-zinc-600 to-zinc-700 hover:from-zinc-700 hover:to-zinc-800 text-white hover:translate-y-0.5 cursor-pointer rounded-lg shadow-md">
-            <LogIn size={18} /> Sign In <ArrowRight size={16} />
+          <button className="w-full flex items-center justify-center transition-all gap-2 py-3 bg-gradient-to-r from-zinc-600 to-zinc-700 hover:from-zinc-700 hover:to-zinc-800 text-white hover:translate-y-0.5 cursor-pointer rounded-lg shadow-md ">
+            {!loading ? (
+              <span className="flex items-center justify-center gap-2">
+                <Loader2 className="animate-spin" size={18} /> Sign In...{" "}
+              </span>
+            ) : (
+              <span className="flex items-center gap-2 justify-center ">
+                <LogIn size={18} /> Sign In{" "}
+              </span>
+            )}
           </button>
         </form>
 
@@ -144,7 +157,7 @@ const Login = () => {
         <div className="mt-3 flex flex-col gap-4">
           <button
             onClick={handleGoogleSignIn}
-            className="w-full inline-flex justify-center py-2 px-4 border border-zinc-600 rounded-md shadow-sm bg-zinc-700 text-sm font-medium text-zinc-300 hover:bg-zinc-600"
+            className="w-full inline-flex justify-center py-2.5  px-4  rounded-md shadow-sm text-sm font-medium text-zinc-300 bg-gradient-to-r from-zinc-600 to-zinc-700 hover:from-zinc-700 hover:to-zinc-800"
           >
             <svg
               className="w-5 h-5 mr-2"

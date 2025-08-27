@@ -35,7 +35,7 @@ app.get("/", (req, res) => {
     res.send("World");
 });
 
-app.use('/', chatRoute);
+app.use('/chat', chatRoute);
 app.use('/user', userRoute);
 
 app.listen(PORT, () => {

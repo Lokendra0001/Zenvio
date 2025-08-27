@@ -2,13 +2,14 @@ import { EditIcon, LockKeyhole, Menu, X } from "lucide-react";
 import { HiOutlineMenuAlt2 } from "react-icons/hi";
 import React, { useDebugValue, useState } from "react";
 import { NavLink } from "react-router-dom";
-import logo from "../assests/images/logo.jpg";
+import logo from "../assests/images/logo4.png";
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect } from "react";
 import axios from "axios";
 import serverObj from "../config/serverObj";
 import { toggleNewChat } from "../store/slices/newChatSlice";
 import { addHistory } from "../store/slices/selectedHistory";
+import { handleErrorMsg } from "../config/toast";
 
 const SideBar = () => {
   const [history, setHistory] = useState([]);
@@ -19,13 +20,12 @@ const SideBar = () => {
 
   const handleFetchAllHistory = async () => {
     try {
-      const { data } = await axios.get(`${serverURL}/user/getHistory`, {
+      const { data } = await axios.get(`${serverURL}/chat/getHistory`, {
         withCredentials: true,
       });
       setHistory([...data].reverse());
-      console.log(data);
     } catch (err) {
-      console.log(err);
+      handleErrorMsg(err.message);
     }
   };
 
@@ -37,22 +37,29 @@ const SideBar = () => {
   };
 
   useEffect(() => {
-    handleFetchAllHistory();
+    if (user) {
+      handleFetchAllHistory();
+    }
   }, []);
 
   const sidebarContent = (
     <div className="flex flex-col w-full border-r border-zinc-700 h-full">
       {/* Logo & NewChat */}
       <div className="border-b border-zinc-700 flex justify-between items-center h-[9dvh] px-4 pl-2">
-        <span className="text-xl font-medium flex gap-1.5 items-center">
+        <NavLink
+          to={"/"}
+          className="text-xl font-medium flex gap-1.5 items-center"
+        >
           <img src={logo} alt="Z" className="h-5.5" /> Zenvio
-        </span>
+        </NavLink>
         <div className="flex gap-3.5 select-none">
-          <EditIcon
-            size={20}
-            className="text-gray-300 font-bold hover:text-white cursor-pointer"
-            onClick={handleNewChat}
-          />
+          <span title="New Chat">
+            <EditIcon
+              size={20}
+              className="text-gray-300 font-bold hover:text-white cursor-pointer"
+              onClick={handleNewChat}
+            />
+          </span>
           {isOpen && (
             <X
               size={21.5}
@@ -96,6 +103,7 @@ const SideBar = () => {
               className="py-2 px-2 border-b rounded-md border-zinc-800 hover:bg-white/5 cursor-pointer transition-colors "
               onClick={() => {
                 dispatch(addHistory(history[i]));
+                setIsOpen(false);
               }}
             >
               <p className="text-zinc-200 text-sm font-medium mb-1.5 line-clamp-1">
