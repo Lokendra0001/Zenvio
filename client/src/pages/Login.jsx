@@ -157,7 +157,7 @@ const Login = () => {
         <div className="mt-3 flex flex-col gap-4">
           <button
             onClick={handleGoogleSignIn}
-            className="w-full inline-flex justify-center py-2.5  px-4  rounded-md shadow-sm text-sm font-medium text-zinc-300 bg-gradient-to-r from-zinc-600 to-zinc-700 hover:from-zinc-700 hover:to-zinc-800"
+            className="w-full inline-flex justify-center py-2.5 px-4  rounded-md shadow-sm text-sm font-medium text-zinc-300 bg-gradient-to-r from-zinc-600 to-zinc-700 hover:from-zinc-700 hover:to-zinc-800"
           >
             <svg
               className="w-5 h-5 mr-2"

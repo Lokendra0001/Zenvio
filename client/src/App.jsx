@@ -25,7 +25,7 @@ const App = () => {
         handleSuccessMsg(res.data.msg);
       } catch (err) {
         dispatch(logoutUser());
-        console.log(err);
+
       } finally {
         setTimeout(() => {
           setAuthLoading(false);

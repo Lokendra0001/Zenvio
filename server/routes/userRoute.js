@@ -15,7 +15,7 @@ route.get('/logout', checkAuthentication, handleLogout);
 
 
 // Trigger Google login
-route.get("/google-login", passport.authenticate("google", { scope: ["profile", "email"] }));
+route.get("/google-login", passport.authenticate("google", { scope: ["profile", "email"], prompt: "select_account" }));
 
 // Google OAuth callback
 route.get(
