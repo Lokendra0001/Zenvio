@@ -145,7 +145,7 @@ const SideBar = () => {
           onClick={() => setIsOpen(false)}
         >
           <div
-            className="w-[85%] bg-zinc-900 h-full shadow-xl p-2"
+            className="w-[80%] bg-zinc-900 h-full shadow-xl p-2"
             onClick={(e) => e.stopPropagation()}
           >
             {sidebarContent}

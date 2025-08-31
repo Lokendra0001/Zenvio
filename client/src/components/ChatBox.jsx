@@ -254,7 +254,7 @@ const ChatBox = () => {
       </div>
 
       {/* Input Area */}
-      <div className="px-4 lg:px-25 mb-2 ">
+      <div className="px-4 lg:px-25 mb-3 md:mb-0 ">
         <div className="bg-[#303030] rounded-xl  py-2 shadow-inner px-2">
           <div
             className={`flex ${
@@ -320,6 +320,10 @@ const ChatBox = () => {
           </div>
         </div>
       </div>
+
+      <p className="w-full hidden md:block my-2 text-center text-xs text-zinc-400">
+        Zenvio AI · Powered by Gemini Flash · Always verify key details.
+      </p>
     </div>
   );
 };
