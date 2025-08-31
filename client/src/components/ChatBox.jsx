@@ -61,7 +61,7 @@ const ChatBox = () => {
   };
 
   const handleNewChat = async () => {
-    if (user) {
+    if (user && messages.length > 0) {
       try {
         await axios.post(
           `${serverURL}/chat/addHistory`,
